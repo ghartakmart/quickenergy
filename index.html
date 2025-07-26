@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QuickEnergy - Emergency Auto Services</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    #mobile-menu {
+      transition: all 0.3s ease;
+    }
+    #mobile-menu.hidden {
+      transform: translateX(-100%);
+      opacity: 0;
+    }
+    #mobile-menu.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    @media (max-width: 768px) {
+      #sticky-mobile-bar {
+        display: flex;
+      }
+    }
+  </style>
+  <script defer>
+    const allowedCities = ["Patna", "Ranchi", "Gaya", "Samastipur", "Muzaffarpur"];
+
+    function toggleMenu() {
+      const menu = document.getElementById('mobile-menu');
+      menu.classList.toggle('hidden');
+      menu.classList.toggle('show');
+    }
+
+    function toggleForm(service) {
+      document.getElementById('serviceType').value = service;
+      document.getElementById('requestForm').classList.remove('hidden');
+      document.getElementById('requestForm').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function getLocation() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(showPosition, showError);
+      } else {
+        alert("Geolocation is not supported by this browser.");
+      }
+    }
+
+    function showPosition(position) {
+      const lat = position.coords.latitude;
+      const lon = position.coords.longitude;
+
+      const geocodingUrl = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lon}&key=AIzaSyXXXXXX_YOUR_KEY_HERE`;
+
+      fetch(geocodingUrl)
+        .then(response => response.json())
+        .then(data => {
+          if (data.status === "OK") {
+            const results = data.results[0];
+            const address = results.formatted_address;
+            const cityComponent = results.address_components.find(c => c.types.includes("locality"));
+            const city = cityComponent ? cityComponent.long_name : null;
+
+            document.getElementById("locationInput").value = address;
+            document.getElementById("locationInput").focus();
+
+            if (city && allowedCities.includes(city)) {
+              document.getElementById('requestForm').scrollIntoView({ behavior: 'smooth' });
+            } else {
+              alert("Sorry, our service is currently only available in selected Bihar cities.");
+            }
+          } else {
+            document.getElementById("locationInput").value = `Lat: ${lat}, Lon: ${lon}`;
+            document.getElementById("locationInput").focus();
+          }
+        })
+        .catch(() => {
+          document.getElementById("locationInput").value = `Lat: ${lat}, Lon: ${lon}`;
+          document.getElementById("locationInput").focus();
+        });
+    }
+
+    function showError(error) {
+      switch(error.code) {
+        case error.PERMISSION_DENIED:
+          alert("User denied the request for Geolocation.");
+          break;
+        case error.POSITION_UNAVAILABLE:
+          alert("Location information is unavailable.");
+          break;
+        case error.TIMEOUT:
+          alert("The request to get user location timed out.");
+          break;
+        case error.UNKNOWN_ERROR:
+          alert("An unknown error occurred.");
+          break;
+      }
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+      alert("✅ Request submitted successfully! Our team will reach you shortly.");
+      event.target.reset();
+    }
+  </script>
+</head>
+<body class="bg-green-900 text-white">
+  <!-- Header -->
+  <header class="bg-green-800 shadow-md sticky top-0 z-50" style="background-color: ora;">
+    <div class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
+      <div class="flex items-center gap-2">
+        <img src="logoqe.jpg" alt="QuickEnergy Logo" class="w-10 h-10 rounded-full">
+        <h1 class="text-2xl font-bold">QuickEnergy</h1>
+      </div>
+      <div class="md:hidden">
+        <button onclick="toggleMenu()" class="text-white focus:outline-none">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+      <nav class="hidden md:flex space-x-6 text-white font-medium">
+        <a href="#services" class="flex items-center gap-1 hover:text-yellow-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M2 3a1 1 0 011-1h14a1 1 0 011 1v2H2V3z" /><path fill-rule="evenodd" d="M2 7h16v10a1 1 0 01-1 1H3a1 1 0 01-1-1V7zm8 2a1 1 0 00-1 1v4a1 1 0 002 0v-4a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>Services</a>
+        <a href="#about" class="flex items-center gap-1 hover:text-yellow-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7s-8-3.134-8-7 3.582-7 8-7 8 3.134 8 7zM8.293 9.707a1 1 0 001.414 0L10 9.414l.293.293a1 1 0 101.414-1.414L11.414 8l.293-.293a1 1 0 00-1.414-1.414L10 6.586l-.293-.293a1 1 0 00-1.414 1.414L8.586 8l-.293.293a1 1 0 000 1.414z" clip-rule="evenodd" /></svg>About Us</a>
+        <a href="javascript:void(0)" onclick="toggleForm('')" class="bg-yellow-500 text-green-900 px-4 py-2 rounded hover:bg-yellow-400">Request Help Now</a>
+      </nav>
+    </div>
+    <!-- Mobile Menu -->
+    <div id="mobile-menu" class="md:hidden hidden px-4 pb-4 space-y-2 bg-green-800">
+      <a href="#services" class="block text-white hover:text-yellow-400">Services</a>
+      <a href="#about" class="block text-white hover:text-yellow-400">About Us</a>
+      <a href="javascript:void(0)" onclick="toggleForm('')" class="block bg-yellow-500 text-green-900 px-4 py-2 rounded hover:bg-yellow-400">Request Help Now</a>
+    </div>
+  </header>
+
+  <!-- Sticky Mobile Bar -->
+  <div id="sticky-mobile-bar" class="fixed bottom-0 left-0 right-0 bg-yellow-500 text-green-900 p-3 justify-center items-center text-center font-semibold hidden z-40">
+    <button onclick="toggleForm('')" class="w-full">🚨 Request Help Now</button>
+  </div>
+
+  <!-- Hero Section -->
+  <section class="bg-gradient-to-r from-green-700 to-yellow-600 text-white p-6 md:p-10 text-center">
+    <h1 class="text-3xl md:text-4xl font-bold mb-2">QuickEnergy</h1>
+    <p class="text-base md:text-lg">Emergency Fuel, Mechanic & EV Charging in 20–30 mins</p>
+    <p class="text-sm mt-1 flex justify-center items-center gap-1"><span class="text-yellow-200">📍</span>Currently serving in: Samastipur, Muzaffarpur, Patna - Bihar</p>
+  </section>
+
+  <!-- Offer Section -->
+  <section class="bg-yellow-500 text-green-900 text-center p-4 md:p-6" style="background-color: rgb(225, 243, 105);">
+    <h2 class="text-xl md:text-2xl font-bold mb-2">🎉 Special Launch Offer!</h2>
+    <p class="text-base md:text-lg">Get <strong>₹10 OFF</strong> on your first emergency fuel or mechanic request. Limited time only!</p>
+  </section>
+
+  <!-- Services Section -->
+  <!-- (unchanged content continues below this) -->
+ <!-- Services Section -->
+  <section id="services" class="p-6" style="color: black; background-color: rgb(19, 240, 85);" >
+    <h2 class="text-3xl font-bold text-center mb-8" style="color: aliceblue;">Our Fast Services</h2>
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-center">
+      <div class="bg-white shadow-md rounded-xl p-4 cursor-pointer hover:bg-blue-50" onclick="toggleForm('Fuel')">
+        <h3 class="text-xl font-semibold">🛢 Fuel Delivery</h3>
+        <p class="text-sm mt-2">Get fuel delivered to your spot in 30 mins.</p>
+      </div>
+      <div class="bg-white shadow-md rounded-xl p-4 cursor-pointer hover:bg-blue-50" onclick="toggleForm('Mechanic')">
+        <h3 class="text-xl font-semibold">🛠 Mechanic Help</h3>
+        <p class="text-sm mt-2">Stuck on road? Get instant repairs by experts.</p>
+      </div>
+      <div class="bg-white shadow-md rounded-xl p-4 cursor-pointer hover:bg-blue-50" onclick="toggleForm('CNG')">
+        <h3 class="text-xl font-semibold">🛢 CNG Gas Tank</h3>
+        <p class="text-sm mt-2">Order a portable CNG gas tank anywhere nearby.</p>
+      </div>
+      <div class="bg-white shadow-md rounded-xl p-4 cursor-pointer hover:bg-blue-50" onclick="toggleForm('EV Charging')">
+        <h3 class="text-xl font-semibold">⚡ EV Charging (Pre-book)</h3>
+        <p class="text-sm mt-2">Pre-book fast EV charging (done in 2 hrs!) and grow your delivery or travel business without waiting 12 hours.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- About Section -->
+  <section id="about" class="p-6 bg-white" style="color: black;">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl font-bold mb-4">Why QuickEnergy?</h2>
+      <p class="text-gray-700 leading-relaxed text-lg">
+        We understand emergencies can’t wait. Whether your vehicle is out of fuel, needs urgent repairs, or your EV battery is nearly dead—QuickEnergy ensures help reaches you in 30 minutes.
+        <br /><br />
+        With our fast EV pre-booking service, you can charge your electric vehicle at our high-speed stations in just 2 hours instead of waiting 10–12 hours at public stations—boosting your business and saving your time.
+      </p>
+    </div>
+  </section>
+
+  <!-- Hidden Request Form Section -->
+  <section id="requestForm" class="p-6 hidden" style="color: black;">
+    <div class="bg-white shadow-lg rounded-xl p-6 max-w-2xl mx-auto">
+      <h2 class="text-2xl font-bold mb-4">Request a Service</h2>
+      <form class="grid grid-cols-1 gap-4" onsubmit="handleFormSubmit(event)">
+        <input type="hidden" id="serviceType" name="serviceType" value="" />
+
+        <label>
+          Your Name:
+          <input type="text" name="name" class="w-full border p-2 rounded mt-1" required />
+        </label>
+
+        <label>
+          Phone Number:
+          <input type="tel" name="phone" class="w-full border p-2 rounded mt-1" required />
+        </label>
+
+        <label>
+          Location:
+          <div class="flex gap-2">
+            <input type="text" id="locationInput" name="location" placeholder="Click 'Use GPS' or enter manually" class="w-full border p-2 rounded mt-1" required />
+            <button type="button" onclick="getLocation()" class="bg-green-600 text-white px-3 rounded mt-1 hover:bg-green-700">Use GPS</button>
+          </div>
+        </label>
+
+        <label>
+          Vehicle Type:
+          <input type="text" name="vehicle" placeholder="e.g. Maruti Swift, EV Scooter" class="w-full border p-2 rounded mt-1" />
+        </label>
+
+        <label>
+          Additional Notes:
+          <textarea name="notes" class="w-full border p-2 rounded mt-1" placeholder="Optional"></textarea>
+        </label>
+
+        <button type="submit" class="bg-blue-600 text-white p-3 rounded-xl hover:bg-blue-700">Submit Request</button>
+      </form>
+    </div>
+  </section>
+
+  <!-- Testimonials Section -->
+<section class="bg-white py-8 text-black">
+  <div class="max-w-6xl mx-auto px-4">
+    <h2 class="text-3xl font-bold text-center mb-6">What Our Customers Say</h2>
+    <div class="grid md:grid-cols-3 gap-6">
+      <div class="bg-green-50 p-4 rounded-lg shadow">
+        <p class="text-gray-800 italic">"QuickEnergy saved my day! I was stuck without fuel, and they delivered in 20 minutes. Highly recommended."</p>
+        <div class="mt-4 font-semibold text-green-800">— Rakesh, Patna</div>
+      </div>
+      <div class="bg-green-50 p-4 rounded-lg shadow">
+        <p class="text-gray-800 italic">"I run a food delivery business and their EV pre-booking service has changed everything. 2-hour charging is a game changer!"</p>
+        <div class="mt-4 font-semibold text-green-800">— Priya, Muzaffarpur</div>
+      </div>
+      <div class="bg-green-50 p-4 rounded-lg shadow">
+        <p class="text-gray-800 italic">"Fast mechanic service in the middle of nowhere? Yep, they did it. Lifesavers."</p>
+        <div class="mt-4 font-semibold text-green-800">— Anand, Samastipur</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Feedback Form Section -->
+<section id="feedback" class="bg-green-100 py-8">
+  <div class="max-w-3xl mx-auto px-4">
+    <h2 class="text-2xl font-bold text-center text-green-900 mb-6">We'd Love Your Feedback</h2>
+    <form onsubmit="submitFeedback(event)" class="bg-white p-6 rounded-lg shadow space-y-4">
+      <div>
+        <label for="name" class="block font-medium text-green-900">Your Name</label>
+        <input type="text" id="name" name="name" required class="mt-1 w-full border border-green-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600" />
+      </div>
+
+      <div>
+        <label for="feedback" class="block font-medium text-green-900">Your Feedback</label>
+        <textarea id="feedback" name="feedback" rows="4" required class="mt-1 w-full border border-green-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-600"></textarea>
+      </div>
+
+      <div>
+        <span class="block font-medium text-green-900 mb-1">Star Rating</span>
+        <div class="flex space-x-2" id="star-rating">
+          <!-- Stars -->
+          <svg class="w-8 h-8 text-gray-300 cursor-pointer hover:text-yellow-400" fill="currentColor" viewBox="0 0 20 20" data-value="1"><path d="M10 15l-5.878 3.09L5.5 12.5 1 8.91l6.061-.89L10 2l2.939 6.02L19 8.91l-4.5 3.59 1.378 5.59z"/></svg>
+          <svg class="w-8 h-8 text-gray-300 cursor-pointer hover:text-yellow-400" fill="currentColor" viewBox="0 0 20 20" data-value="2"><path d="M10 15l-5.878 3.09L5.5 12.5 1 8.91l6.061-.89L10 2l2.939 6.02L19 8.91l-4.5 3.59 1.378 5.59z"/></svg>
+          <svg class="w-8 h-8 text-gray-300 cursor-pointer hover:text-yellow-400" fill="currentColor" viewBox="0 0 20 20" data-value="3"><path d="M10 15l-5.878 3.09L5.5 12.5 1 8.91l6.061-.89L10 2l2.939 6.02L19 8.91l-4.5 3.59 1.378 5.59z"/></svg>
+          <svg class="w-8 h-8 text-gray-300 cursor-pointer hover:text-yellow-400" fill="currentColor" viewBox="0 0 20 20" data-value="4"><path d="M10 15l-5.878 3.09L5.5 12.5 1 8.91l6.061-.89L10 2l2.939 6.02L19 8.91l-4.5 3.59 1.378 5.59z"/></svg>
+          <svg class="w-8 h-8 text-gray-300 cursor-pointer hover:text-yellow-400" fill="currentColor" viewBox="0 0 20 20" data-value="5"><path d="M10 15l-5.878 3.09L5.5 12.5 1 8.91l6.061-.89L10 2l2.939 6.02L19 8.91l-4.5 3.59 1.378 5.59z"/></svg>
+        </div>
+        <input type="hidden" name="rating" id="rating" required>
+      </div>
+
+      <button type="submit" class="w-full bg-green-700 hover:bg-green-800 text-white font-semibold py-2 rounded">Submit Feedback</button>
+    </form>
+  </div>
+</section>
+
+<!-- Star Rating Script -->
+<script>
+  const stars = document.querySelectorAll('#star-rating svg');
+  const ratingInput = document.getElementById('rating');
+
+  stars.forEach(star => {
+    star.addEventListener('click', () => {
+      const value = star.getAttribute('data-value');
+      ratingInput.value = value;
+      updateStarStyles(value);
+    });
+  });
+
+  function updateStarStyles(value) {
+    stars.forEach(star => {
+      const starValue = star.getAttribute('data-value');
+      star.classList.toggle('text-yellow-400', starValue <= value);
+      star.classList.toggle('text-gray-300', starValue > value);
+    });
+  }
+
+  function submitFeedback(event) {
+    event.preventDefault();
+    const form = event.target;
+    alert("⭐ Thank you for your feedback!");
+    form.reset();
+    updateStarStyles(0);
+  }
+</script>
+
+
+  <!-- Footer -->
+  <footer class="text-center text-sm p-4 text-gray-600 bg-gray-100">
+    <p class="flex items-center justify-center gap-2">
+      <span class="text-red-500 text-lg">📍</span>
+      Currently serving in: Samastipur, Muzaffarpur, Patna - Bihar
+    </p>
+    <p class="mt-2">&copy; 2025 QuickEnergy. All rights reserved.</p>
+  </footer>
+</body>
+</html>
+<!-- End of index.html -->
+<!-- Note: Replace `AIzaSyXXXX
